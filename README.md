@@ -1,0 +1,2 @@
+# power_e-commerce
+This is the first open source project I copied,power e-commerce, which is a front end and back-end separation project. I am determined to write the underlying source code of this project, learn to make wheels, turn the core excellent technology into my own use, and write my own close-up to integrate my own ideas.  I will write a lot of project notes in markdown grammar. Welcome to learn and ask questions to optimize the project code. Thank you
