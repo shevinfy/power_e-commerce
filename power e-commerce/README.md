@@ -1,1 +1,1113 @@
-power e-commerce 后端开发文档
+# power e-commerce 后端开发文档
+
+## 参考文档：
+
+[(20条消息) Github开源项目详解--Mall（一）_吃个小菜的博客-CSDN博客_mall项目](https://blog.csdn.net/qq_45714272/article/details/125565042)
+
+[mall架构及功能概览 | mall学习教程 (macrozheng.com)](https://www.macrozheng.com/mall/foreword/mall_foreword_01.html#mall项目简介)
+
+## 后台架构：
+
+```
+mall
+├── mall-common – 工具类及通用代码
+├── mall-mbg – MyBatisGenerator生成的数据库操作代码
+├── mall-security – SpringSecurity封装公用模块
+├── mall-admin – 后台商城管理系统接口
+├── mall-search – 基于Elasticsearch的商品搜索系统
+├── mall-portal – 前台商城系统接口
+└── mall-demo – 框架搭建时的测试代码
+```
+
+# mall整合SpringBoot+MyBatis搭建基本骨架
+
+[macrozheng](https://www.macrozheng.com/)2019年5月6日Mall学习教程架构篇SpringBootMyBatis
+
+------
+
+本文主要讲解mall整合SpringBoot+MyBatis搭建基本骨架，以商品品牌为例实现基本的CRUD操作及通过PageHelper实现分页查询。
+
+## mysql数据库环境搭建
+
+- 下载并安装mysql5.7版本，下载地址：https://dev.mysql.com/downloads/installer/
+- 设置数据库帐号密码：root root
+- 下载并安装客户端连接工具Navicat,下载地址：http://www.formysql.com/xiazai.html
+- 创建数据库mall
+- 导入mall的数据库脚本，如果你使用的是`mall-learnging`项目中的代码的话，使用该脚本：https://github.com/macrozheng/mall-learning/blob/master/document/sql/mall.sql
+- 如果你使用的是`mall`项目的话，使用该脚本：https://github.com/macrozheng/mall/blob/master/document/sql/mall.sql
+
+## 项目使用框架介绍
+
+### SpringBoot
+
+> SpringBoot可以让你快速构建基于Spring的Web应用程序，内置多种Web容器(如Tomcat)，通过启动入口程序的main函数即可运行。
+
+### PagerHelper
+
+> MyBatis分页插件，简单的几行代码就能实现分页，在与SpringBoot整合时，只要整合了PagerHelper就自动整合了MyBatis。
+
+
+
+```java
+PageHelper.startPage(pageNum, pageSize);
+//之后进行查询操作将自动进行分页
+List<PmsBrand> brandList = brandMapper.selectByExample(new PmsBrandExample());
+//通过构造PageInfo对象获取分页信息，如当前页码，总页数，总条数
+PageInfo<PmsBrand> pageInfo = new PageInfo<PmsBrand>(list);
+```
+
+### Druid
+
+> alibaba开源的数据库连接池，号称Java语言中最好的数据库连接池。
+
+### Mybatis generator
+
+> MyBatis的代码生成器，可以根据数据库生成model、mapper.xml、mapper接口和Example，通常情况下的单表查询不用再手写mapper。
+
+## 项目搭建
+
+### 一、使用IDEA初始化一个SpringBoot项目
+
+![img](https://www.macrozheng.com/assets/arch_screen_01.ab5f2485.png)
+
+### 二、添加项目依赖
+
+> 在pom.xml中添加相关依赖。
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <!--本项目的信息-->
+    <groupId>com.example</groupId>
+    <artifactId>power_e-commerce</artifactId>
+    <version>0.0.1-SNAPSHOT</version>
+    <name>power_e-commerce</name>
+    <description>Demo project for Spring Boot</description>
+    <properties>
+        <java.version>1.8</java.version>
+    </properties>
+
+    <!--导入子项目到父项目使用-->
+    <modules>
+        <module>power-admin</module>
+        <module>power-common</module>
+        <module>power-demo</module>
+        <module>power-mbg</module>
+        <module>power-portal</module>
+        <module>power-search</module>
+        <module>power-security</module>
+    </modules>
+
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>2.7.3</version>
+        <relativePath/> <!-- lookup parent from repository -->
+    </parent>
+
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+        <java.version>1.8</java.version>
+        <skipTests>true</skipTests>
+        <docker.host>http://192.168.3.105:2375</docker.host>
+        <docker.maven.plugin.version>0.40.0</docker.maven.plugin.version>
+        <pagehelper-starer.version>1.4.2</pagehelper-starer.version>
+        <pagehelper.version>5.3.0</pagehelper.version>
+        <druid.version>1.2.9</druid.version>
+        <hutool.version>5.8.0</hutool.version>
+        <springfox-swagger.version>3.0.0</springfox-swagger.version>
+        <swagger-models.version>1.6.0</swagger-models.version>
+        <swagger-annotations.version>1.6.0</swagger-annotations.version>
+        <mybatis-generator.version>1.4.1</mybatis-generator.version>
+        <mybatis.version>3.5.9</mybatis.version>
+        <mysql-connector.version>8.0.29</mysql-connector.version>
+        <spring-data-commons.version>2.7.0</spring-data-commons.version>
+        <jjwt.version>0.9.1</jjwt.version>
+        <aliyun-oss.version>2.5.0</aliyun-oss.version>
+        <logstash-logback.version>7.2</logstash-logback.version>
+        <minio.version>8.4.1</minio.version>
+        <mall-common.version>0.0.1-SNAPSHOT</mall-common.version>
+        <mall-mbg.version>0.0.1-SNAPSHOT</mall-mbg.version>
+        <mall-security.version>0.0.1-SNAPSHOT</mall-security.version>
+    </properties>
+
+    <!--项目依赖-->
+    <dependencies>
+        <!--springboot的通用依赖模块 starter (web,actuator,aop,test) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-aop</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-configuration-processor</artifactId>
+            <optional>true</optional>
+        </dependency>
+
+        <!--MyBatis分页插件-->
+        <dependency>
+            <groupId>com.github.pagehelper</groupId>
+            <artifactId>pagehelper-spring-boot-starter</artifactId>
+            <version>1.4.2</version>
+        </dependency>
+
+        <!--集成druid连接池 druid是阿里公司的，java中的数据库连接池-->
+        <dependency>
+            <groupId>com.alibaba</groupId>
+            <artifactId>druid-spring-boot-starter</artifactId>
+            <version>1.2.9</version>
+        </dependency>
+
+        <!--MyBatis 生成器-->
+        <dependency>
+            <groupId>org.mybatis.generator</groupId>
+            <artifactId>mybatis-generator-core</artifactId>
+            <version>1.4.1</version>
+        </dependency>
+
+        <!--mysql数据库驱动-->
+        <dependency>
+            <groupId>mysql</groupId>
+            <artifactId>mysql-connector-java</artifactId>
+            <version>8.0.15</version>
+        </dependency>
+
+        <!--lombok依赖-->
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <optional>true</optional>
+        </dependency>
+
+        <!--hutool中有很多java的类-->
+        <dependency>
+            <groupId>cn.hutool</groupId>
+            <artifactId>hutool-all</artifactId>
+            <version>5.8.0</version>
+        </dependency>
+
+    </dependencies>
+
+    <dependencyManagement>
+        <dependencies>
+            <!--power通用模块-->
+            <!--common是power中工具类模块-->
+            <dependency>
+                <groupId>com.example</groupId>
+                <artifactId>power-common</artifactId>
+                <version>${power-common.version}</version>
+            </dependency>
+            <!--mgb是power中的MBG生成模块-->
+            <dependency>
+                <groupId>com.example</groupId>
+                <artifactId>power-mbg</artifactId>
+                <version>${power-mbg.version}</version>
+            </dependency>
+            <!--power项目中的安全模块-->
+            <dependency>
+                <groupId>com.example</groupId>
+                <artifactId>power-security</artifactId>
+                <version>${power-security.version}</version>
+            </dependency>
+            <!--MyBatis分页插件starter-->
+            <dependency>
+                <groupId>com.github.pagehelper</groupId>
+                <artifactId>pagehelper-spring-boot-starter</artifactId>
+                <version>${pagehelper-starter.version}</version>
+            </dependency>
+            <!--MyBatis分页插件-->
+            <dependency>
+                <groupId>com.github.pagehelper</groupId>
+                <artifactId>pagehelper</artifactId>
+                <version>${pagehelper}</version>
+            </dependency>
+            <!--集成druid连接池-->
+            <dependency>
+                <groupId>com.alibaba</groupId>
+                <artifactId>druid-spring-boot-starter</artifactId>
+                <version>${druid.version}</version>
+            </dependency>
+            <!--Hutool Java工具包-->
+            <dependency>
+                <groupId>cn.hutool</groupId>
+                <artifactId>hutool-all</artifactId>
+                <version>${hutool.version}</version>
+            </dependency>
+            <!--Swagger-UI API文档生产工具-->
+            <dependency>
+                <groupId>io.springfox</groupId>
+                <artifactId>springfox-boot-starter</artifactId>
+                <version>${spring-swagger.version}</version>
+            </dependency>
+            <!--解决Swagger访问主页时的NumberFormatException问题-->
+            <dependency>
+                <groupId>io.swagger</groupId>
+                <artifactId>swagger-models</artifactId>
+                <version>${swagger-models.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.swagger</groupId>
+                <artifactId>swagger-annotations</artifactId>
+                <version>${swagger-annotations.version}</version>
+            </dependency>
+            <!--MyBatis 生成器-->
+            <dependency>
+                <groupId>org.mybatis.generator</groupId>
+                <artifactId>mybatis-generator-core</artifactId>
+                <version>${mybatis-generator.version}</version>
+            </dependency>
+            <!--MyBatis-->
+            <dependency>
+                <groupId>org.mybatis</groupId>
+                <artifactId>mybatis</artifactId>
+                <version>${mybatis.version}</version>
+            </dependency>
+            <!--Mysql数据库驱动包-->
+            <dependency>
+                <groupId>mysql</groupId>
+                <artifactId>mysql-connector-java</artifactId>
+                <version>${mysql-connector.version}</version>
+            </dependency>
+            <!--SpringData工具包-->
+            <dependency>
+                <groupId>org.springframework.data</groupId>
+                <artifactId>spring-data-commons</artifactId>
+                <version>${spring-data-commons.version}</version>
+            </dependency>
+            <!--JWT（Json Web Token）登录支持-->
+            <dependency>
+                <groupId>io.jsonwebtoken</groupId>
+                <artifactId>jjwt</artifactId>
+                <version>${jjwt.version}</version>
+            </dependency>
+            <!--阿里云OSS  对象存储服务-->
+            <dependency>
+                <groupId>com.aliyun.oss</groupId>
+                <artifactId>aliyun-sdk-oss</artifactId>
+                <version>${aliyun-oss.version}</version>
+            </dependency>
+            <!--集成logstash-->
+            <dependency>
+                <groupId>net.logstash.logback</groupId>
+                <artifactId>logstash-logback-encoder</artifactId>
+                <version>7.2</version>
+            </dependency>
+            <!--MinIO JAVA SDK-->
+            <dependency>
+                <groupId>io.minio</groupId>
+                <artifactId>minio</artifactId>
+                <version>${minio.version}</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+    <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.springframework.boot</groupId>
+                    <artifactId>spring-boot-maven-plugin</artifactId>
+                </plugin>
+                <plugin>
+                    <groupId>io.fabric8</groupId>
+                    <artifactId>docker-maven-plugin</artifactId>
+                    <version>${docker.maven.plugin.version}</version>
+                        <executions>
+                            <!--如果想在项目打包时构建镜像添加-->
+                            <execution>
+                                <id>build-iamge</id>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>build</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    <configuration>
+                        <!--Docker 远程管理地址-->
+                        <dockerHost>${docker.host}</dockerHost>
+                        <images>
+                            <image>
+                                <!--定义镜像名称-->
+                                <name>power/${project.name}:${project.version}</name>
+                                <!--定义镜像构建行为-->
+                                <build>
+                                    <!--定义基础镜像-->
+                                    <from>java:8</from>
+                                    <args>
+                                        <JAR_FILE>${project.build.finalName}.jar</JAR_FILE>
+                                    </args>
+                                    <!--定义哪些文件拷贝到容器中-->
+                                    <assembly>
+                                        <!--定义拷贝到容器的目录-->
+                                        <targetDir>/</targetDir>
+                                        <!--只拷贝生成的jar包-->
+                                        <descriptorRef>artifact</descriptorRef>
+                                    </assembly>
+                                    <!--定义容器启动命令-->
+                                    <enetyPoint>["java","-jar","-Dspring.profiles.active=prod","/"${project.build.finalName}.jar]</enetyPoint>
+                                    <!--定义维护者-->
+                                    <maintainer>shevinfy</maintainer>
+                                </build>
+                            </image>
+                        </images>
+                    </configuration>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+    </build>
+
+</project>
+
+```
+
+#### groupId与a啥的Id：
+
+groupId：是项目组织唯一的标识符，实际对应java包的结构，是main目录里java的目录结构
+artifactId：就是项目唯一的标识符，实际项目的名称
+
+groupId一般分为多个段，这里只说两段，第一段为域，第二段为公司名称。域又分为org、com、cn等等许多，其中org为非盈利阻止，com为商业阻止。比如apache公司的tomcat项目，groupId为org.apache，它的域为org，公司名称为apache，artifactId为tomcat
+
+#### OSS：
+
+OSS是阿里云对象存储服务（Object Storage Service）的一个简称，它是阿里云提供的海量、安全、低成本、高可靠的云存储服务。
+即开即用、无限大空间的存储集群。相较传统建服务器存储而言，OSS在可靠性、安全性、成本和数据处理能力方面都有着突出的优势。使用OSS，您可以通过网络随时存储和调用包括文本、图片和视频等在内的各种非结构化数据文件。
+OSS将数据文件以对象/文件（Object）的形式上传到存储空间（Bucket）中。OSS提供的是一个Key-Value键值对形式的对象存储服务。用户可以根据Object的名称（Key）唯一地址获取该Object的内容。
+
+#### logstash：
+
+logstash就是一根具备实时数据传输能力的管道，负责将数据信息从管道的输入端传输到管道的输出端；与此同时这根管道还可以让你根据自己的需求在中间加上滤网，Logstash提供里很多功能强大的滤网以满足你的各种应用场景。
+
+logstash常用于日志系统中做日志采集设备，最常用于ELK中作为日志收集器使用。
+
+#### MinIo java SDK：
+
+MinIO 是一款基于Go语言发开的高性能、分布式的对象存储系统。客户端支持Java,Net,Python,Javacript, Golang语言。
+
+MinIO 是一款高性能、**分布式的对象存储系统**. 它是一款软件产品, 可以100%的运行在标准硬件。
+
+### 三、修改power-admin的SpringBoot配置文件
+
+yml文件分为application.yml，application-dev.yml，application-prod.yml
+
+#### 1、application.yml是总的
+
+> 在application.yml中添加数据源配置和MyBatis的mapper.xml的路径配置。
+
+```yaml
+spring:
+  application:
+    name: power-search  #应用程序名称
+  profiles:
+    active: dev #默认为开发环境
+
+  #springboot升级到2.6之后，需要设置spring.mvc.pathmatch.matching-strategy来兼容Swagger2
+  mvc:
+    pathmatch:
+      matching-strategy: ant_path_matcher
+
+
+server:
+  port: 8081  # 服务器配置
+
+# 配置Scanner扫描器
+mybatis:
+  mapper-locations: # 配置多个扫描路径
+    - classpath:dao/*.xml
+    - classpath*:com/**/mapper/*/xml
+```
+
+##### 1.1、spring.mvc.pathmatch.matching-strategy:
+
+由于**Spring Boot 2.6.x** 请求路径与 Spring MVC 处理映射匹配的默认策略从`AntPathMatcher`更改为`PathPatternParser`。所以需要设置`spring.mvc.pathmatch.matching-strategy为ant-path-matcher`来改变它。
+
+##### 1.2、mybatis的springboot使用：
+
+pom
+
+```xml
+<dependency>
+    <groupId>org.mybatis.spring.boot</groupId>
+    <artifactId>mybatis-spring-boot-starter</artifactId>
+</dependency>
+```
+
+如果使用了pagehelper的starter，则可以只导入如下的Maven库即可
+
+```xml
+<dependency>
+    <groupId>com.github.pagehelper</groupId>
+    <artifactId>pagehelper-spring-boot-starter</artifactId>
+</dependency>
+```
+
+在配置类中定义接口扫描范围
+
+```java
+@Configuration
+@EnableTransactionManagement
+@MapperScan({"com.test.mapper","com.test.portal.dao"})
+public class MyBatisConfig {
+}
+```
+
+@Configuration用于指定该类为配置入口类
+可以在MappderScan中定义多个接口包名
+@EnableTransactionManagement是用于开启事务的
+
+在yml中配置Scanner扫描器
+
+```yml
+mybatis:
+  mapper-locations:
+    - classpath:dao/*.xml
+    - classpath*:com/**/mapper/*.xml
+```
+
+可以配置多个扫描路径
+
+#### 2、application-dev.yml 开发环境
+
+```yml
+spring:
+  datasource: #配置jdbc数据源
+    url: jdbc:mysql://localhost:3306/power?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asiz/Shanghai&useSSL=false
+    username: root
+    userword: xwwfy
+    druid:  # 可以是c3p0，dbcp或者druid、HikariCP等任意数据源
+      initial-size: 5 #连接池初始化大小
+      min-idle: 10 #最小空闲连接数
+      max-active: 20 #最大连接数
+      web-stat-filter: # 这个过滤器的作用就是统计web应用请求中所有的数据库信息
+        exclusions: "*.js,*.gif,*.jpg,*.png,*.css,*ico,/druid/*" #不统计这些请求数据
+      stat-view-servlet: #访问监控网页的登录用户名和密码
+        login-username: druid
+        login-password: druid
+
+  data:
+    elasticsearch:
+      repositories: # 开启Repository模式
+        enabled: true
+  elesticsearch:
+    uris: localhost:9200
+
+# 修改日志级别
+logging:
+  level:
+    # 设置日志的默认级别为 info
+    root: info
+    # 设置com.example.poweradmin包下的日志级别是debug
+    com.example.poweradmin: debug
+  # 指定日志文件输出
+  file:
+    name: F:\java_project\mall\shevinfy_power_e-commerce\power e-commerce\document\log\poweradmin_log.txt
+
+logstash:
+  host: localhost
+  enableInnerLog: false
+
+```
+
+##### 2.1、druid配置
+
+**配置Druid数据源（连接池）：** 如同以前 c3p0、dbcp 数据源可以设置数据源连接初始化大小、最大连接数、等待时间、最小连接数 等一样，Druid 数据源同理可以进行设置；
+
+**配置 Druid web 监控 filter（WebStatFilter）：** **这个过滤器的作用就是统计 web 应用请求中所有的数据库信息**，比如 发出的 sql 语句，sql 执行的时间、请求次数、请求的 url 地址、以及seesion 监控、数据库表的访问次数 等等。
+
+**配置 Druid 后台管理 Servlet（StatViewServlet）：** Druid 数据源具有监控的功能，并提供了一个 web 界面方便用户查看，类似安装 路由器 时，人家也提供了一个默认的 web 页面；需要设置 Druid 的后台管理页面的属性，比如 **登录账号、密码**等；
+
+##### 2.2、elasticsearch：
+
+Elasticsearch 是一个基于Lucene的分布式、高扩展、高实时的搜索与数据分析引擎，常被用作**全文检索、结构化搜索、分析**以及这三个功能的组合。它可以被下面这样准确的形容：
+
+- 一个分布式的实时文档存储，**每个字段 可以被索引与搜索**
+- 一个分布式**实时分析搜索引擎**
+- 能胜任上百个服务节点的扩展，并支持 PB 级别的结构化或者非结构化数据
+  
+
+##### 2.3.配置jdbc数据源
+
+可以是c3p0、dbcp或者druid、HikariCP等任意数据源
+
+```yml
+spring:
+  datasource:
+    url: jdbc:mysql://192.168.9.51:3306/testdb
+    username: root
+    password: 123456
+    druid:
+      initial-size: 5 #连接池初始化大小
+      min-idle: 10 #最小空闲连接数
+      max-active: 20 #最大连接数
+```
+
+#### 3、applicattion-prov.yml 生产环境
+
+```yml
+spring:
+  datasource:
+    url: jdbc:mysql://db:3306/power?useUnicode=ture&characterEncoding=utf-8&serverTimezone=Asia/Shanghai&useSSL=false
+    username: root
+    password: xwwfy
+
+    druid:
+      inttial-size: 5 #连接池初始化大小
+      min-idle: 10 #最小空闲连接数
+      max-active: 20 #最大连接数
+      web-stat-filter:
+        exclusions: "*.jpg,*.png,*.gif,*.css,*.js,*.ico,/druid/*" #不统计这些请求数据
+      stat-view-servlet: #访问监控网页的登录用户名和密码
+        login-username: druid
+        login-password: druid
+
+  data:
+    elasticsearch:
+      repositories:
+        enabled: true
+  elasticsearch:
+      uris: es:9200
+
+logging:
+  file:
+    path: /var/logs
+  level:
+    root: info
+    com.example.power: info
+
+logstash:
+  host: logstash
+```
+
+与dev基本一样，有一些细节配置改一下就好了，比如：接口都要改成上线服务器的地址。文件位置也是服务器的位置。
+
+### 项目结构说明
+
+![img](https://www.macrozheng.com/assets/arch_screen_02.151cd8d3.png)
+
+### [#](https://www.macrozheng.com/mall/architect/mall_arch_01.html#mybatis-generator-配置文件)Mybatis generator 配置文件
+
+> 配置数据库连接，Mybatis generator生成model、mapper接口及mapper.xml的路径。
+
+
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE generatorConfiguration
+        PUBLIC "-//mybatis.org//DTD MyBatis Generator Configuration 1.0//EN"
+        "http://mybatis.org/dtd/mybatis-generator-config_1_0.dtd">
+
+<generatorConfiguration>
+    <properties resource="generator.properties"/>
+    <context id="MySqlContext" targetRuntime="MyBatis3" defaultModelType="flat">
+        <property name="beginningDelimiter" value="`"/>
+        <property name="endingDelimiter" value="`"/>
+        <property name="javaFileEncoding" value="UTF-8"/>
+        <!-- 为模型生成序列化方法-->
+        <plugin type="org.mybatis.generator.plugins.SerializablePlugin"/>
+        <!-- 为生成的Java模型创建一个toString方法 -->
+        <plugin type="org.mybatis.generator.plugins.ToStringPlugin"/>
+        <!--可以自定义生成model的代码注释-->
+        <commentGenerator type="com.macro.mall.tiny.mbg.CommentGenerator">
+            <!-- 是否去除自动生成的注释 true：是 ： false:否 -->
+            <property name="suppressAllComments" value="true"/>
+            <property name="suppressDate" value="true"/>
+            <property name="addRemarkComments" value="true"/>
+        </commentGenerator>
+        <!--配置数据库连接-->
+        <jdbcConnection driverClass="${jdbc.driverClass}"
+                        connectionURL="${jdbc.connectionURL}"
+                        userId="${jdbc.userId}"
+                        password="${jdbc.password}">
+            <!--解决mysql驱动升级到8.0后不生成指定数据库代码的问题-->
+            <property name="nullCatalogMeansCurrent" value="true" />
+        </jdbcConnection>
+        <!--指定生成model的路径-->
+        <javaModelGenerator targetPackage="com.macro.mall.tiny.mbg.model" targetProject="mall-tiny-01\src\main\java"/>
+        <!--指定生成mapper.xml的路径-->
+        <sqlMapGenerator targetPackage="com.macro.mall.tiny.mbg.mapper" targetProject="mall-tiny-01\src\main\resources"/>
+        <!--指定生成mapper接口的的路径-->
+        <javaClientGenerator type="XMLMAPPER" targetPackage="com.macro.mall.tiny.mbg.mapper"
+                             targetProject="mall-tiny-01\src\main\java"/>
+        <!--生成全部表tableName设为%-->
+        <table tableName="pms_brand">
+            <generatedKey column="id" sqlStatement="MySql" identity="true"/>
+        </table>
+    </context>
+</generatorConfiguration>
+```
+
+1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+
+### [#](https://www.macrozheng.com/mall/architect/mall_arch_01.html#运行generator的main函数生成代码)运行Generator的main函数生成代码
+
+
+
+```java
+package com.macro.mall.tiny.mbg;
+
+import org.mybatis.generator.api.MyBatisGenerator;
+import org.mybatis.generator.config.Configuration;
+import org.mybatis.generator.config.xml.ConfigurationParser;
+import org.mybatis.generator.internal.DefaultShellCallback;
+
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * 用于生产MBG的代码
+ * Created by macro on 2018/4/26.
+ */
+public class Generator {
+    public static void main(String[] args) throws Exception {
+        //MBG 执行过程中的警告信息
+        List<String> warnings = new ArrayList<String>();
+        //当生成的代码重复时，覆盖原代码
+        boolean overwrite = true;
+        //读取我们的 MBG 配置文件
+        InputStream is = Generator.class.getResourceAsStream("/generatorConfig.xml");
+        ConfigurationParser cp = new ConfigurationParser(warnings);
+        Configuration config = cp.parseConfiguration(is);
+        is.close();
+
+        DefaultShellCallback callback = new DefaultShellCallback(overwrite);
+        //创建 MBG
+        MyBatisGenerator myBatisGenerator = new MyBatisGenerator(config, callback, warnings);
+        //执行生成代码
+        myBatisGenerator.generate(null);
+        //输出警告信息
+        for (String warning : warnings) {
+            System.out.println(warning);
+        }
+    }
+}
+```
+
+1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+
+### [#](https://www.macrozheng.com/mall/architect/mall_arch_01.html#添加mybatis的java配置)添加MyBatis的Java配置
+
+> 用于配置需要动态生成的mapper接口的路径
+
+
+
+```java
+package com.macro.mall.tiny.config;
+
+import org.mybatis.spring.annotation.MapperScan;
+import org.springframework.context.annotation.Configuration;
+
+/**
+ * MyBatis配置类
+ * Created by macro on 2019/4/8.
+ */
+@Configuration
+@MapperScan("com.macro.mall.tiny.mbg.mapper")
+public class MyBatisConfig {
+}
+```
+
+1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+
+### [#](https://www.macrozheng.com/mall/architect/mall_arch_01.html#实现controller中的接口)实现Controller中的接口
+
+> 实现PmsBrand表中的添加、修改、删除及分页查询接口。
+
+
+
+```java
+package com.macro.mall.tiny.controller;
+
+import com.macro.mall.tiny.common.api.CommonPage;
+import com.macro.mall.tiny.common.api.CommonResult;
+import com.macro.mall.tiny.mbg.model.PmsBrand;
+import com.macro.mall.tiny.service.PmsBrandService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+
+/**
+ * 品牌管理Controller
+ * Created by macro on 2019/4/19.
+ */
+@Controller
+@RequestMapping("/brand")
+public class PmsBrandController {
+    @Autowired
+    private PmsBrandService demoService;
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(PmsBrandController.class);
+
+    @RequestMapping(value = "listAll", method = RequestMethod.GET)
+    @ResponseBody
+    public CommonResult<List<PmsBrand>> getBrandList() {
+        return CommonResult.success(demoService.listAllBrand());
+    }
+
+    @RequestMapping(value = "/create", method = RequestMethod.POST)
+    @ResponseBody
+    public CommonResult createBrand(@RequestBody PmsBrand pmsBrand) {
+        CommonResult commonResult;
+        int count = demoService.createBrand(pmsBrand);
+        if (count == 1) {
+            commonResult = CommonResult.success(pmsBrand);
+            LOGGER.debug("createBrand success:{}", pmsBrand);
+        } else {
+            commonResult = CommonResult.failed("操作失败");
+            LOGGER.debug("createBrand failed:{}", pmsBrand);
+        }
+        return commonResult;
+    }
+
+    @RequestMapping(value = "/update/{id}", method = RequestMethod.POST)
+    @ResponseBody
+    public CommonResult updateBrand(@PathVariable("id") Long id, @RequestBody PmsBrand pmsBrandDto, BindingResult result) {
+        CommonResult commonResult;
+        int count = demoService.updateBrand(id, pmsBrandDto);
+        if (count == 1) {
+            commonResult = CommonResult.success(pmsBrandDto);
+            LOGGER.debug("updateBrand success:{}", pmsBrandDto);
+        } else {
+            commonResult = CommonResult.failed("操作失败");
+            LOGGER.debug("updateBrand failed:{}", pmsBrandDto);
+        }
+        return commonResult;
+    }
+
+    @RequestMapping(value = "/delete/{id}", method = RequestMethod.GET)
+    @ResponseBody
+    public CommonResult deleteBrand(@PathVariable("id") Long id) {
+        int count = demoService.deleteBrand(id);
+        if (count == 1) {
+            LOGGER.debug("deleteBrand success :id={}", id);
+            return CommonResult.success(null);
+        } else {
+            LOGGER.debug("deleteBrand failed :id={}", id);
+            return CommonResult.failed("操作失败");
+        }
+    }
+
+    @RequestMapping(value = "/list", method = RequestMethod.GET)
+    @ResponseBody
+    public CommonResult<CommonPage<PmsBrand>> listBrand(@RequestParam(value = "pageNum", defaultValue = "1") Integer pageNum,
+                                                        @RequestParam(value = "pageSize", defaultValue = "3") Integer pageSize) {
+        List<PmsBrand> brandList = demoService.listBrand(pageNum, pageSize);
+        return CommonResult.success(CommonPage.restPage(brandList));
+    }
+
+    @RequestMapping(value = "/{id}", method = RequestMethod.GET)
+    @ResponseBody
+    public CommonResult<PmsBrand> brand(@PathVariable("id") Long id) {
+        return CommonResult.success(demoService.getBrand(id));
+    }
+}
+```
+
+1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+47
+48
+49
+50
+51
+52
+53
+54
+55
+56
+57
+58
+59
+60
+61
+62
+63
+64
+65
+66
+67
+68
+69
+70
+71
+72
+73
+74
+75
+76
+77
+78
+79
+80
+81
+82
+83
+84
+85
+86
+87
+88
+89
+90
+91
+92
+
+### [#](https://www.macrozheng.com/mall/architect/mall_arch_01.html#添加service接口)添加Service接口
+
+
+
+```java
+package com.macro.mall.tiny.service;
+
+
+import com.macro.mall.tiny.mbg.model.PmsBrand;
+
+import java.util.List;
+
+/**
+ * PmsBrandService
+ * Created by macro on 2019/4/19.
+ */
+public interface PmsBrandService {
+    List<PmsBrand> listAllBrand();
+
+    int createBrand(PmsBrand brand);
+
+    int updateBrand(Long id, PmsBrand brand);
+
+    int deleteBrand(Long id);
+
+    List<PmsBrand> listBrand(int pageNum, int pageSize);
+
+    PmsBrand getBrand(Long id);
+}
+```
+
+### 实现Service接口
+
+
+
+```java
+package com.macro.mall.tiny.service.impl;
+
+import com.github.pagehelper.PageHelper;
+import com.macro.mall.tiny.mbg.mapper.PmsBrandMapper;
+import com.macro.mall.tiny.mbg.model.PmsBrand;
+import com.macro.mall.tiny.mbg.model.PmsBrandExample;
+import com.macro.mall.tiny.service.PmsBrandService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+
+/**
+ * PmsBrandService实现类
+ * Created by macro on 2019/4/19.
+ */
+@Service
+public class PmsBrandServiceImpl implements PmsBrandService {
+    @Autowired
+    private PmsBrandMapper brandMapper;
+
+    @Override
+    public List<PmsBrand> listAllBrand() {
+        return brandMapper.selectByExample(new PmsBrandExample());
+    }
+
+    @Override
+    public int createBrand(PmsBrand brand) {
+        return brandMapper.insertSelective(brand);
+    }
+
+    @Override
+    public int updateBrand(Long id, PmsBrand brand) {
+        brand.setId(id);
+        return brandMapper.updateByPrimaryKeySelective(brand);
+    }
+
+    @Override
+    public int deleteBrand(Long id) {
+        return brandMapper.deleteByPrimaryKey(id);
+    }
+
+    @Override
+    public List<PmsBrand> listBrand(int pageNum, int pageSize) {
+        PageHelper.startPage(pageNum, pageSize);
+        return brandMapper.selectByExample(new PmsBrandExample());
+    }
+
+    @Override
+    public PmsBrand getBrand(Long id) {
+        return brandMapper.selectByPrimaryKey(id);
+    }
+}
+```
+
+
+
+### 开发接口的套路：
+
+建表写sql 定义实体类 dao与mapper service controller maven工程分析
+

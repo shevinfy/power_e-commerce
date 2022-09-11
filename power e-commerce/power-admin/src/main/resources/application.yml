@@ -1,0 +1,20 @@
+spring:
+  application:
+    name: power-search  #应用程序名称
+  profiles:
+    active: dev #默认为开发环境
+
+  #springboot升级到2.6之后，需要设置spring.mvc.pathmatch.matching-strategy来兼容Swagger2
+  mvc:
+    pathmatch:
+      matching-strategy: ant_path_matcher
+
+
+server:
+  port: 8081  # 服务器配置
+
+# 配置Scanner扫描器
+mybatis:
+  mapper-locations: # 配置多个扫描路径
+    - classpath:dao/*.xml
+    - classpath*:com/**/mapper/*/xml
