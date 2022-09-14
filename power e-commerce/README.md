@@ -19,22 +19,13 @@ mall
 └── mall-demo – 框架搭建时的测试代码
 ```
 
-# mall整合SpringBoot+MyBatis搭建基本骨架
+# power e-commerce整合SpringBoot+MyBatis搭建基本骨架
 
 [macrozheng](https://www.macrozheng.com/)2019年5月6日Mall学习教程架构篇SpringBootMyBatis
 
 ------
 
-本文主要讲解mall整合SpringBoot+MyBatis搭建基本骨架，以商品品牌为例实现基本的CRUD操作及通过PageHelper实现分页查询。
-
-## mysql数据库环境搭建
-
-- 下载并安装mysql5.7版本，下载地址：https://dev.mysql.com/downloads/installer/
-- 设置数据库帐号密码：root root
-- 下载并安装客户端连接工具Navicat,下载地址：http://www.formysql.com/xiazai.html
-- 创建数据库mall
-- 导入mall的数据库脚本，如果你使用的是`mall-learnging`项目中的代码的话，使用该脚本：https://github.com/macrozheng/mall-learning/blob/master/document/sql/mall.sql
-- 如果你使用的是`mall`项目的话，使用该脚本：https://github.com/macrozheng/mall/blob/master/document/sql/mall.sql
+整合SpringBoot+MyBatis搭建基本骨架，实现基本的CRUD操作及通过PageHelper实现分页查询。
 
 ## 项目使用框架介绍
 
@@ -381,7 +372,7 @@ PageInfo<PmsBrand> pageInfo = new PageInfo<PmsBrand>(list);
 
 ```
 
-#### groupId与a啥的Id：
+#### groupId与artifactId：
 
 groupId：是项目组织唯一的标识符，实际对应java包的结构，是main目录里java的目录结构
 artifactId：就是项目唯一的标识符，实际项目的名称
@@ -602,13 +593,15 @@ logstash:
 
 ### 项目结构说明
 
-![img](https://www.macrozheng.com/assets/arch_screen_02.151cd8d3.png)
+先写poweradmin
 
-### [#](https://www.macrozheng.com/mall/architect/mall_arch_01.html#mybatis-generator-配置文件)Mybatis generator 配置文件
+![img](images/1.png)
+
+## MyBatis搭建基本骨架
+
+### Mybatis generator 配置文件
 
 > 配置数据库连接，Mybatis generator生成model、mapper接口及mapper.xml的路径。
-
-
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
@@ -656,51 +649,150 @@ logstash:
 </generatorConfiguration>
 ```
 
-1
-2
-3
-4
-5
-6
-7
-8
-9
-10
-11
-12
-13
-14
-15
-16
-17
-18
-19
-20
-21
-22
-23
-24
-25
-26
-27
-28
-29
-30
-31
-32
-33
-34
-35
-36
-37
-38
-39
-40
-41
-42
-43
+generetorConfig配置文件详细介绍：[(21条消息) generatorConfiguration配置详解_无形风的博客-CSDN博客_generatorconfig配置](https://blog.csdn.net/xukaiqiang123/article/details/125993327)
 
-### [#](https://www.macrozheng.com/mall/architect/mall_arch_01.html#运行generator的main函数生成代码)运行Generator的main函数生成代码
+#### properties元素：
+
+这个元素用来指定外部的属性元素，不是必须的元素。通过resource或者url来指定属性文件的位置
+
+#### 子元素：
+
+这些子元素（有严格的配置顺序）包括：
+
+```xml
+<property> (0个或多个)
+<plugin> (0个或多个)
+<commentGenerator> (0个或1个)
+<jdbcConnection> (1个)
+<javaTypeResolver> (0个或1个)
+<javaModelGenerator> (1个)
+<sqlMapGenerator> (0个或1个)
+<javaClientGenerator> (0个或1个)
+<table> (1个或多个)
+```
+
+**反单引号(`)\**就是\**分隔符**，**分隔符**可以用于**表名**或者**列名**。
+
+##### property标签支持的属性：
+
+```
+autoDelimitKeywords
+beginningDelimiter
+endingDelimiter
+javaFileEncoding
+javaFormatter
+xmlFormatter
+
+autoDelimitKeyword：当表名或者字段名为SQL关键字的时候，可以设置该属性为true，MBG会自动给表名或字段名添加分隔符。
+
+beginningDelimiter和endingDelimiter属性：
+由于beginningDelimiter和endingDelimiter的默认值为双引号(")，在Mysql中不能这么写，所以还要将这两个默认值改为反单引号(`)，配置如下：
+
+属性javaFileEncoding设置要使用的Java文件的编码，默认使用当前平台的编码，只有当生产的编码需要特殊指定时才需要使用，一般用不到。
+
+最后两个javaFormatter和xmlFormatter属性可能会很有用，如果你想使用模板来定制生成的java文件和xml文件的样式，你可以通过指定这两个属性的值来实现。
+```
+
+#####  plugin 元素：
+
+元素用来**定义一个插件**。插件用于**扩展或修改**通过MyBatis Generator (MBG)==代码生成器生成的代码==。
+
+##### commentGenerator元素：
+
+该元素最多可以配置1个。
+
+这个元素非常有用，相信很多人都有过这样的需求，就是希望MBG生成的代码中可以包含**注释信息**，具体就是生成表或字段的备注信息。
+
+默认的实现类中提供了两个可选属性，需要通过属性进行配置。
+
+```
+suppressAllComments:**阻止**生成注释，默认为false
+suppressDate:**阻止**生成的注释包含时间戳，默认为false
+```
+
+#####  jdbcConnection 元素：
+
+用于指定数据库连接信息，该元素必选，并且只能有一个。
+
+配置该元素只需要注意如果JDBC驱动不在**classpath**下，就需要通过元素引入jar包，这里**推荐**将jar包放到**classpath**下。
+
+该元素有两个必选属性:
+
+```
+driverClass:访问数据库的JDBC驱动程序的完全限定类名
+connectionURL:访问数据库的JDBC连接URL
+12
+```
+
+该元素还有两个可选属性:
+
+```
+userId:访问数据库的用户ID
+password:访问数据库的密码
+```
+
+##### javaModelGenerator 元素：
+
+该元素必须配置一个，并且最多一个。
+
+该元素用来控制生成的实体类，根据中配置的defaultModelType，一个表可能会对应生成多个不同的实体类。一个表对应多个类实际上并不方便，所以前面也推荐使用flat，这种情况下一个表对应一个实体类。
+
+该元素只有两个属性，都是必选的。
+
+```
+targetPackage:生成实体类存放的包名，一般就是放在该包下。实际还会受到其他配置的影响(<table>中会提到)。
+targetProject:指定目标项目路径，可以是绝对路径或相对路径（如 targetProject="src/main/java"）
+```
+
+#####  sqlMapGenerator元素
+
+该元素可选，最多配置一个。但是有如下两种必选的特殊情况：
+
+```xml
+如果targetRuntime目标是**iBATIS2**，该元素必须配置一个。
+如果targetRuntime目标是**MyBatis3**，只有当<javaClientGenerator>需要XML时，该元素必须配置一个。 如果没有配置<javaClientGenerator>，则使用以下的规则：
+    如果指定了一个<sqlMapGenerator>，那么MBG将只生成XML的SQL映射文件和实体类。
+    如果没有指定<sqlMapGenerator>，那么MBG将只生成实体类。
+1234
+```
+
+该元素只有两个属性（和前面提过的的属性含义一样），都是必选的。
+
+```
+targetPackage:生成实体类存放的包名，一般就是放在该包下。实际还会受到其他配置的影响(<table>中会提到)。
+targetProject:指定目标项目路径，可以是绝对路径或相对路径（如 targetProject="src/main/resource
+```
+
+#####  javaClientGenerator 元素：
+
+该元素可选，最多配置一个。
+
+如果不配置该元素，就不会生成Mapper接口。
+
+##### table 元素：
+
+该元素至少要配置一个，可以配置多个。
+
+该元素用来配置要通过内省的表。只有配置的才会生成实体类和其他文件。
+
+该元素有一个必选属性：
+
+```
+tableName：指定要生成的表名，可以使用SQL通配符匹配多个表。
+1
+```
+
+例如要生成全部的表，可以按如下配置：
+
+```java
+<table tableName="%" />
+```
+
+
+
+
+
+### 运行Generator的main函数生成代码
 
 
 
@@ -745,45 +837,6 @@ public class Generator {
 }
 ```
 
-1
-2
-3
-4
-5
-6
-7
-8
-9
-10
-11
-12
-13
-14
-15
-16
-17
-18
-19
-20
-21
-22
-23
-24
-25
-26
-27
-28
-29
-30
-31
-32
-33
-34
-35
-36
-37
-38
-
 ### [#](https://www.macrozheng.com/mall/architect/mall_arch_01.html#添加mybatis的java配置)添加MyBatis的Java配置
 
 > 用于配置需要动态生成的mapper接口的路径
@@ -805,21 +858,6 @@ import org.springframework.context.annotation.Configuration;
 public class MyBatisConfig {
 }
 ```
-
-1
-2
-3
-4
-5
-6
-7
-8
-9
-10
-11
-12
-13
-14
 
 ### [#](https://www.macrozheng.com/mall/architect/mall_arch_01.html#实现controller中的接口)实现Controller中的接口
 
@@ -920,99 +958,6 @@ public class PmsBrandController {
     }
 }
 ```
-
-1
-2
-3
-4
-5
-6
-7
-8
-9
-10
-11
-12
-13
-14
-15
-16
-17
-18
-19
-20
-21
-22
-23
-24
-25
-26
-27
-28
-29
-30
-31
-32
-33
-34
-35
-36
-37
-38
-39
-40
-41
-42
-43
-44
-45
-46
-47
-48
-49
-50
-51
-52
-53
-54
-55
-56
-57
-58
-59
-60
-61
-62
-63
-64
-65
-66
-67
-68
-69
-70
-71
-72
-73
-74
-75
-76
-77
-78
-79
-80
-81
-82
-83
-84
-85
-86
-87
-88
-89
-90
-91
-92
 
 ### [#](https://www.macrozheng.com/mall/architect/mall_arch_01.html#添加service接口)添加Service接口
 

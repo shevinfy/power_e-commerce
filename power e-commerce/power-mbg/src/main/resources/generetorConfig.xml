@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE generatorConfiguration
+        PUBLIC "-//mybatis.org//DTD MyBatis Generator Configuration 1.0//EN"
+        "http://mybatis.org/dtd/mybatis-generator-config_1_0.dtd">
+
+<generatorConfiguration>
+    <!--绑定generator.properties配置-->
+    <properties resource="generator.properties"/>
+    <context id="MySqlContext" targetRuntime="MyBatis3" defaultModelType="flat">
+        <!--property（所有物）添加分隔符，设置编码-->
+            <!--begin和end默认双引号mysql要用单引号-->
+            <property name="beginningDelimiter" value="`"/>
+            <property name="endingDelimiter" value="`"/>
+            <!--特殊指定编码-->
+            <property name="javaFileEncoding" value="UTF-8"/>
+        <!--plugin（插件）修改或者扩展MBG生成的代码-->
+            <!--为模型生成序列化方法-->
+            <plugin type="org.mybatis.generator.plugins.SerializablePlugin"/>
+            <!--为生成的Java模型创建一个toString方法-->
+            <plugin type="org.mybatis.generator.plugins.ToStringPlugin"/>
+            <!--生成mapper.xml时覆盖原文件-->
+            <plugin type="org.mybatis.generator.plugins.UnmergeableXmlMappersPlugin" />
+        <!--commentGenerator（评论生成器）-->
+            <commentGenerator type="com.example.power.CommentGenerator">
+                <!--是否去除自动生成的注释 true 是  false 否-->
+                <property name="suppressAllComments" value="true"/>
+                <!--是否去除自动生成注释时间 true 是 false 否-->
+                <property name="suppressDate" value="true"/>
+                <property name="addRemarkComments" value="true"/>
+            </commentGenerator>
+        <!--jdbc-->
+            <jdbcConnection driverClass="${jdbc.driverClass}"
+                            connectionURL="${jdbc.connectionURL}"
+                            userId="${jdbc.userId}"
+                            password="${jdbc.password}">
+                    <!--解决mysql驱动升级到8.0后不生成指定数据库代码的问题-->
+                    <property name="nullCatalogMeansCurrent" value="true"/>
+            </jdbcConnection>
+        <!--控制生成的实体类-->
+            <javaModelGenerator targetPackage="com.example.powermbg.model" targetProject="power-mbg\src\main\java"/>
+        <!--我们的targetRunTime目标是MyBatis3  如果指定了sqlMapGenerator  MBG就会生成xml的SQL映射文件和实体类-->
+            <sqlMapGenerator targetPackage="com.example.powermbg.mapper" targetProject="power-mbg\src\main\resources"/>
+        <!--如果不配置该元素，就不会生成Mapper接口-->
+            <javaClientGenerator type="XMLMAPPER" targetPackage="com.example.powermbg.mapper"
+                                targerProject="power-mbg\src\main\java"/>
+        <!--配置通过内省的表，只有配置的才会生成实体类和其他文件-->
+            <table tableName="%">       <!--生成全部表tableName设为%-->
+                <generatedKey colume="id" sqlStatement="Mysql" identity="true"/>
+            </table>
+    </context>
+</generatorConfiguration>
