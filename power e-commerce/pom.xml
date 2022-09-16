@@ -9,11 +9,6 @@
     <artifactId>power_e-commerce</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <packaging>pom</packaging>
-    <name>power_e-commerce</name>
-    <description>Demo project for Spring Boot</description>
-    <properties>
-        <java.version>1.8</java.version>
-    </properties>
 
     <!--导入子项目到父项目使用-->
     <modules>
@@ -165,7 +160,7 @@
             <dependency>
                 <groupId>com.github.pagehelper</groupId>
                 <artifactId>pagehelper</artifactId>
-                <version>${pagehelper}</version>
+                <version>${pagehelper.version}</version>
             </dependency>
             <!--集成druid连接池-->
             <dependency>
