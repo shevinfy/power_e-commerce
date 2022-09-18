@@ -19,6 +19,24 @@ mall
 └── mall-demo – 框架搭建时的测试代码
 ```
 
+#### 总结：
+
+springboot项目，一般大项目都会分成一个父项目，下面多个子项目，子项目是后台web，admin，前台接口portal，或者mgb代码生成之类的。目的：模块之间隔离，修改某一个模块的代码，其他模块不会受到影响。
+
+每一个子项目都有一个自己的pom.xml文件，项目依赖文件。
+
+父项目的pom.xml文件与子项目pom.xml文件的关系：（是继承关系！）
+
+父项目写好全部的依赖，子项目就可以用这些依赖。在这里父项目pom.xml中dependencies和dependencyManager很重要。如果是dependencies中的依赖子项目会自动继承，但是dependencyManager标签中申明的依赖，子项目想要继承就要在自己的pom.xml中写groupId和artifactId去声明。
+
+#### 我学习的文档：
+
+[SpringBoot 多模块项目 - SpringBoot教程 - 基础教程在线 (nhooo.com)](https://www.nhooo.com/springboot/springboot-multi-module-project.html)
+
+[Maven 多模块父子工程的实现(含Spring Boot示例)_java_脚本之家 (jb51.net)](https://www.jb51.net/article/209590.htm)
+
+[(21条消息) Maven学习笔记-父pom和子pom_一片蓝蓝的云的博客-CSDN博客_父pom](https://blog.csdn.net/mumuwang1234/article/details/108679923)
+
 # power e-commerce整合SpringBoot+MyBatis搭建基本骨架
 
 [macrozheng](https://www.macrozheng.com/)2019年5月6日Mall学习教程架构篇SpringBootMyBatis
@@ -61,7 +79,7 @@ PageInfo<PmsBrand> pageInfo = new PageInfo<PmsBrand>(list);
 
 ![img](https://www.macrozheng.com/assets/arch_screen_01.ab5f2485.png)
 
-### 二、添加项目依赖
+### 二、添加项目依赖pom.xml文件
 
 > 在pom.xml中添加相关依赖。
 
@@ -140,10 +158,6 @@ PageInfo<PmsBrand> pageInfo = new PageInfo<PmsBrand>(list);
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-aop</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-actuator</artifactId>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -816,12 +830,12 @@ jdbc.password=xwwfy
 
 
 
-### 运行Generator的main函数生成代码
+### 3.Generator类（可运行类）
 
-
+运行Generator的main函数生成代码
 
 ```java
-package com.macro.mall.tiny.mbg;
+package com.example.powermbg;
 
 import org.mybatis.generator.api.MyBatisGenerator;
 import org.mybatis.generator.config.Configuration;
@@ -832,40 +846,128 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * 用于生产MBG的代码
- * Created by macro on 2018/4/26.
- */
 public class Generator {
-    public static void main(String[] args) throws Exception {
-        //MBG 执行过程中的警告信息
+    public static void main(String[] args) throws Exception{
+        // MBG 执行过程中的警告信息
         List<String> warnings = new ArrayList<String>();
-        //当生成的代码重复时，覆盖原代码
+        // 当生成代码重复时，覆盖原代码
         boolean overwrite = true;
-        //读取我们的 MBG 配置文件
+        // 读取我们的MBG配置文件
         InputStream is = Generator.class.getResourceAsStream("/generatorConfig.xml");
         ConfigurationParser cp = new ConfigurationParser(warnings);
         Configuration config = cp.parseConfiguration(is);
         is.close();
 
         DefaultShellCallback callback = new DefaultShellCallback(overwrite);
-        //创建 MBG
-        MyBatisGenerator myBatisGenerator = new MyBatisGenerator(config, callback, warnings);
-        //执行生成代码
+        // 创建 MBG
+        MyBatisGenerator myBatisGenerator = new MyBatisGenerator(config,callback,warnings);
+        // 执行生成代码
         myBatisGenerator.generate(null);
-        //输出警告信息
-        for (String warning : warnings) {
+        // 输出警告信息
+        for (String warning:warnings
+             ) {
             System.out.println(warning);
         }
+
     }
 }
 ```
 
-### [#](https://www.macrozheng.com/mall/architect/mall_arch_01.html#添加mybatis的java配置)添加MyBatis的Java配置
+### 4.CommentGenerator.java(mybatis代码自动生成 自定义注解生成)
+
+```java
+package com.example.powermbg;
+
+import org.mybatis.generator.api.IntrospectedColumn;
+import org.mybatis.generator.api.IntrospectedTable;
+import org.mybatis.generator.api.dom.java.CompilationUnit;
+import org.mybatis.generator.api.dom.java.Field;
+import org.mybatis.generator.api.dom.java.FullyQualifiedJavaType;
+import org.mybatis.generator.internal.DefaultCommentGenerator;
+import org.mybatis.generator.internal.util.StringUtility;
+
+import java.util.Properties;
+
+/**
+ *  自定义注释生成器
+ *  继承默认DefaultCommentGenerator类重写方法自定义
+ */
+public class CommentGenerator extends DefaultCommentGenerator {
+    private boolean addRemarkComments = false;
+    private static final String EXAMPLE_SUFFIX="Example";
+    private static final String MAPPER_SUFFIX="Mapper";
+    private static final String API_MODEL_PROPERTY_CLASS_NAME="io.swagger.annotations.ApiModelProperty";
+
+    /**
+     * 设置用户胚珠参数
+     * @param properties
+     */
+    @Override
+    public void addConfigurationProperties(Properties properties){
+        super.addConfigurationProperties(properties);
+        this.addRemarkComments = StringUtility.isTrue(properties.getProperty("addRemarkComments"));
+    }
+
+    /**
+     * 给字段添加注释
+     * @param field 这个field要选择org.mybatis.generator.api.dom.java.Field这个包。
+     * @param introspectedTable
+     * @param introspectedColumn
+     */
+    @Override
+    public void addFieldComment(Field field, IntrospectedTable introspectedTable,
+                                IntrospectedColumn introspectedColumn) {
+        String remarks = introspectedColumn.getRemarks();
+        // 根据参数和备注信息判断信息判断是否添加swagger注释信息
+        if(addRemarkComments&&StringUtility.stringHasValue(remarks)){
+            //数据库中特殊字符需要转义
+            if(remarks.contains("\"")){
+                remarks = remarks.replace("\"","'");
+            }
+            // 给model的字段添加swagger注解
+            field.addJavaDocLine("@ApiModelProperty(value = \""+remarks+"\")");
+        }
+
+    }
+
+
+    /**
+     *  给Model的字段添加注释
+     */
+    private void addFieldJavaDoc(Field field, String remarks) {
+        // 文档注释开始
+        field.addJavaDocLine("/**");
+        //获取数据库字段的备注信息
+        String[] remarkLines = remarks.split(System.getProperty("line.separator"));
+        for (String remarkLine:remarkLines
+        ) {
+            field.addJavaDocLine("*"+remarkLine);
+        }
+        addJavadocTag(field,false);
+        field.addJavaDocLine(" */");
+    }
+
+    @Override
+    public void addJavaFileComment(CompilationUnit compilationUnit) {
+        super.addJavaFileComment(compilationUnit);
+        // 只在model中添加swagger注解类的导入
+        if(!compilationUnit.getType().getFullyQualifiedName().contains(MAPPER_SUFFIX) && !compilationUnit.getType().getFullyQualifiedName().contains(MAPPER_SUFFIX)) {
+            compilationUnit.addImportedType(new FullyQualifiedJavaType(API_MODEL_PROPERTY_CLASS_NAME));
+        }
+    }
+}
+
+```
+
+- addFieldComment：用备注和参数判断去自动生成**字段/属性**的swagger注解。
+- addFieldJavaDoc：自动生成**model**上的注释。通过addJavadocLine去写注释。
+- addJavaFileComment：这个是用来说明自动生成swagger注解是在哪个地方。我写的是只在model中添加swagger注释
+
+
+
+### 添加MyBatis的Java配置
 
 > 用于配置需要动态生成的mapper接口的路径
-
-
 
 ```java
 package com.macro.mall.tiny.config;
@@ -883,11 +985,9 @@ public class MyBatisConfig {
 }
 ```
 
-### [#](https://www.macrozheng.com/mall/architect/mall_arch_01.html#实现controller中的接口)实现Controller中的接口
+### 实现Controller中的接口
 
 > 实现PmsBrand表中的添加、修改、删除及分页查询接口。
-
-
 
 ```java
 package com.macro.mall.tiny.controller;

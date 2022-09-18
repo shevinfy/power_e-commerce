@@ -1,8 +1,4 @@
-2022-09-16 13:25:00.725  INFO 14724 --- [main] c.e.p.PowerAdminApplicationTests         : Starting PowerAdminApplicationTests using Java 1.8.0_221 on LAPTOP-M47I6P36 with PID 14724 (started by Lenovo in F:\java_project\mall\shevinfy_power_e-commerce\power e-commerce\power-admin)
-2022-09-16 13:25:00.750 DEBUG 14724 --- [main] c.e.p.PowerAdminApplicationTests         : Running with Spring Boot v2.7.3, Spring v5.3.22
-2022-09-16 13:25:00.751  INFO 14724 --- [main] c.e.p.PowerAdminApplicationTests         : The following 1 profile is active: "dev"
-2022-09-16 13:25:01.749  INFO 14724 --- [main] c.e.p.PowerAdminApplicationTests         : Started PowerAdminApplicationTests in 1.369 seconds (JVM running for 2.777)
-2022-09-16 13:26:43.080  INFO 21512 --- [main] c.e.p.PowerAdminApplicationTests         : Starting PowerAdminApplicationTests using Java 1.8.0_221 on LAPTOP-M47I6P36 with PID 21512 (started by Lenovo in F:\java_project\mall\shevinfy_power_e-commerce\power e-commerce\power-admin)
-2022-09-16 13:26:43.103 DEBUG 21512 --- [main] c.e.p.PowerAdminApplicationTests         : Running with Spring Boot v2.7.3, Spring v5.3.22
-2022-09-16 13:26:43.103  INFO 21512 --- [main] c.e.p.PowerAdminApplicationTests         : The following 1 profile is active: "dev"
-2022-09-16 13:26:44.109  INFO 21512 --- [main] c.e.p.PowerAdminApplicationTests         : Started PowerAdminApplicationTests in 1.288 seconds (JVM running for 2.193)
+2022-09-18 18:49:04.134  INFO 24988 --- [main] c.e.p.PowerAdminApplicationTests         : Starting PowerAdminApplicationTests using Java 1.8.0_221 on LAPTOP-M47I6P36 with PID 24988 (started by Lenovo in F:\java_project\mall\shevinfy_power_e-commerce\power e-commerce\power-admin)
+2022-09-18 18:49:04.137 DEBUG 24988 --- [main] c.e.p.PowerAdminApplicationTests         : Running with Spring Boot v2.7.3, Spring v5.3.22
+2022-09-18 18:49:04.137  INFO 24988 --- [main] c.e.p.PowerAdminApplicationTests         : The following 1 profile is active: "dev"
+2022-09-18 18:49:05.246  INFO 24988 --- [main] c.e.p.PowerAdminApplicationTests         : Started PowerAdminApplicationTests in 1.403 seconds (JVM running for 2.256)
