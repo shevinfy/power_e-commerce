@@ -1060,7 +1060,7 @@ resource下的mapper：存放xml映射的sql文件。
 
 ==写好mybatis-mbg子模块的以后，我们需要在业务上写service，controller层和MyBatisConfig配置类去动态生成mapper接口的路径==
 
-## power-admin：
+## ==power-admin：==
 
 ### 文件信息：
 
@@ -1091,6 +1091,26 @@ resource
 
 **业务对象**，把业务逻辑封装为一个对象，这个对象可以包括一个或多个其它的对象。
 
+#### Controller（控制层）：
+
+**后台总控制器，接收所有前台传过来的请求**，再把它分配到它需要调的service里，相当于前后台的入口（Controller可以有多个，比如可以有10个不频繁访问的服务，可以用一个Controller来控制，另外两个访问频繁的用另一个Controller控制，分开均衡一点）
+
+#### Services（业务层）【应用层】：
+
+==所有的逻辑在Services里，逻辑，算法，都是由Services构成的==（可以理解成Services里面写核心算法，比如if,else，通过JAVA来实现逻辑的变化，数据的变化）**一个按钮对应一个service，**所有请求先到controller里面，然后再去找它要哪个服务，再创建一个对应的实例。（简单的项目也可以不用控制器，直接前台调services,但一般都会有一个控制器来管理一下服务的请求）
+
+#### Dao（持久层）：
+
+接口（应用层和数据层的接口），==只定义对象，不定义具体的内容==，之所以有Dao，是为了让**Services可以直接用里面定义好的东西**，没有Dao的话是调不到的，相当于是在Services里调的是一个接口，Spring运行的时候Spring和Mybatis实时在里面生成方法，实际生成的方法在jar包里面。每添加一个方法，一个SQL，要在Dao里添加一个接口的定义。通过Dao找Mapper文件下的同名的SQL语句，一个Dao对应一个Mapper
+
+#### Mapper【数据层】：
+
+**写在xml文件里，里面写对应的SQL语句**，实现在数据库中怎么查找。所有的xml都是配置文件，给程序去读取的
+
+#### Model：
+
+保存着与数据库表所对应的结构体，作用是方便用表的结构体，增加Mapper的易用性，把所有SQL字段变成变量放在里面，根据表结构自动生成
+
 #### 参考资料：
 
 [SpringBoot框架中各层（DTO、DAO、Service、Controller）理解 - Chen洋 - 博客园 (cnblogs.com)](https://www.cnblogs.com/cy0628/p/15162816.html)
@@ -1098,6 +1118,8 @@ resource
  [(21条消息) vo、dto、bo、do、po的概念理解以及与controller、service、dao层的对应关系_Albertliuc的博客-CSDN博客_controller dto vo](https://blog.csdn.net/m0_70651612/article/details/125833766)
 
 [(21条消息) Java中Validator的使用_Ark方舟的博客-CSDN博客_java validator](https://blog.csdn.net/weixin_40516924/article/details/121696707)
+
+[(21条消息) Java Web中的mapper，service，controller，model究竟分别是什么作用？_栗少的博客-CSDN博客_java中controller的作用](https://blog.csdn.net/weixin_38556197/article/details/115026671)
 
 
 
