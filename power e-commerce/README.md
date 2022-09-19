@@ -37,7 +37,7 @@ springboot项目，一般大项目都会分成一个父项目，下面多个子�
 
 [(21条消息) Maven学习笔记-父pom和子pom_一片蓝蓝的云的博客-CSDN博客_父pom](https://blog.csdn.net/mumuwang1234/article/details/108679923)
 
-# power e-commerce整合SpringBoot+MyBatis搭建基本骨架
+# power e-commerce整合SpringBoot+MyBatis+swagger+redis+SpringSecurity+JWT+SpringTask+Elasticsearch+MongoDB+RabbitMQ+OSS搭建基本骨架
 
 [macrozheng](https://www.macrozheng.com/)2019年5月6日Mall学习教程架构篇SpringBootMyBatis
 
@@ -611,13 +611,80 @@ logstash:
 
 ![img](images/1.png)
 
-## MyBatis搭建基本骨架
+## power-mbg（MyBatis搭建基本骨架）
 
-#### 参考资料：
+### 参考资料：
 
 [MyBatis：Mybatis逆向工程问题记录 - 怒吼的萝卜 - 博客园 (cnblogs.com)](https://www.cnblogs.com/nhdlb/p/10904567.html)
 
 generetorConfig配置文件详细介绍：[(21条消息) generatorConfiguration配置详解_无形风的博客-CSDN博客_generatorconfig配置](https://blog.csdn.net/xukaiqiang123/article/details/125993327)
+
+==写每一个子模块的时候都要先写pom.xml依赖配置文件，导入对应的依赖==
+
+### pom.xml（power-admin）：
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>com.example</groupId>
+        <artifactId>power_e-commerce</artifactId>
+        <version>0.0.1-SNAPSHOT</version>
+        <relativePath/> <!-- lookup parent from repository -->
+    </parent>
+
+    <groupId>com.example</groupId>
+    <artifactId>power-mbg</artifactId>
+    <version>0.0.1-SNAPSHOT</version>
+
+    <name>power-mbg</name>
+    <description>power-mbg project for power_e-commerce</description>
+
+    <dependencies>
+        <!--通用类依赖导入-->
+        <dependency>
+            <groupId>com.example</groupId>
+            <artifactId>power-common</artifactId>
+        </dependency>
+        <!--分页依赖-->
+        <dependency>
+            <groupId>com.github.pagehelper</groupId>
+            <artifactId>pagehelper-spring-boot-starter</artifactId>
+        </dependency>
+        <!--java与数据库连接池druid-->
+        <dependency>
+            <groupId>com.alibaba</groupId>
+            <artifactId>druid-spring-boot-starter</artifactId>
+        </dependency>
+        <!--mybatis代码生成器mybatis generator-->
+        <dependency>
+            <groupId>org.mybatis.generator</groupId>
+            <artifactId>mybatis-generator-core</artifactId>
+        </dependency>
+        <!--java连接mysql-->
+        <dependency>
+            <groupId>mysql</groupId>
+            <artifactId>mysql-connector-java</artifactId>
+        </dependency>
+    </dependencies>
+    
+</project>
+
+
+```
+
+#### pom.xml（power-mbg）文件总结：
+
+我们是mybatis的自动生成代码子模块，
+
+- 需要mybatis的依赖，
+- 连接数据库，需要mysql-connection-java依赖，
+- 数据库缓存druid依赖。
+- 分页依赖，
+- 通用类依赖。
+- 和每一个子模块都要引入父项目的pom.xml文件
 
 ### Mybatis generator 配置文件
 
@@ -962,6 +1029,85 @@ public class CommentGenerator extends DefaultCommentGenerator {
 - addFieldComment：用备注和参数判断去自动生成**字段/属性**的swagger注解。
 - addFieldJavaDoc：自动生成**model**上的注释。通过addJavadocLine去写注释。
 - addJavaFileComment：这个是用来说明自动生成swagger注解是在哪个地方。我写的是只在model中添加swagger注释
+
+### power-mbg子模块总结：
+
+power-mbg子模块就只有4个文件要自己编写，然后创建3个文件目录去存放自动生成代码。
+
+#### 4个文件：
+
+- generatorConfig.xml：这个文件是写mybatis-mbg自动生成代码的配置。
+  - 可以用插件写生成的代码要加toString方法或者序列化。
+  - 可以用commentGeneretor去写注释
+  - jdbcConnection去连接java与mysql
+  - javaModelGenerator去标志生成的实体类Model放在哪个文件。本项目放在model文件夹。
+  - sqlMapGenerator：标志生成的xml文件烦恼在哪个文件，本项目放在resource的文件夹的mapper下面。
+  - javaClientGenerator是存放生成的接口，本项目放在java文件夹下的mapper下面。
+  - table是指定数据库中哪个表。%代表全部
+- generator.properties：jdbc的配置信息放在这里比如，java-mysql驱动，连接配置信息（ip：端口，地区时间，连接是否为true这些）
+- Generator.java：自动代码生成的启动类。用来输出我们警告信息，指定是否覆盖原代码，读取MBG配置文件，执行生成代码。
+- CommentGenerator.java：写自动生成代码时自定义注释和注解。addFieldComment给字段添加注释，addFieldJavaDoc给model字段添加注释，addJavaFileComment写只在model上添加注释
+
+#### 3个文件目录：
+
+java下的mapper：存放mapper接口文件
+
+java下的model：存放实体类
+
+resource下的mapper：存放xml映射的sql文件。
+
+
+
+==写好mybatis-mbg子模块的以后，我们需要在业务上写service，controller层和MyBatisConfig配置类去动态生成mapper接口的路径==
+
+## power-admin：
+
+### 文件信息：
+
+```
+java com.example.poweradmin
+	bo		业务对象
+	config 	配置
+	controller  控制层（响应用户请求）
+	dao		Mapper层（抽象类：xxxMapper.java文件，交体实现在xxxMapper.xml）
+	dto		数据传输对象
+	service	接口（接口实现类）
+		impl	实现层
+	validator	状态约束校验器
+	PowerAdminApplication
+resource
+	dao
+	META-INF
+	application.yml
+	application-dev.yml
+	application-prod.yml
+```
+
+#### dto（`Data Transfer Object`）：
+
+**数据传输对象**，这个概念来源于J2EE的设计模式，原来的目的是为了EJB的分布式应用提供粗粒度的数据实体，以减少分布式调用的次数，从而提高分布式调用的性能和降低网络负载，但在这里，更符合泛指用于[展示层](https://www.zhihu.com/search?q=展示层&search_source=Entity&hybrid_search_source=Entity&hybrid_search_extra={"sourceType"%3A"article"%2C"sourceId"%3A"502192814"})与服务层之间的数据传输对象。
+
+#### BO（`Business Object`）：
+
+**业务对象**，把业务逻辑封装为一个对象，这个对象可以包括一个或多个其它的对象。
+
+#### 参考资料：
+
+[SpringBoot框架中各层（DTO、DAO、Service、Controller）理解 - Chen洋 - 博客园 (cnblogs.com)](https://www.cnblogs.com/cy0628/p/15162816.html)
+
+ [(21条消息) vo、dto、bo、do、po的概念理解以及与controller、service、dao层的对应关系_Albertliuc的博客-CSDN博客_controller dto vo](https://blog.csdn.net/m0_70651612/article/details/125833766)
+
+[(21条消息) Java中Validator的使用_Ark方舟的博客-CSDN博客_java validator](https://blog.csdn.net/weixin_40516924/article/details/121696707)
+
+
+
+==写每一个子模块的时候都要先写pom.xml依赖配置文件，导入对应的依赖==
+
+### pom.xml（power-admin）：
+
+
+
+
 
 
 
