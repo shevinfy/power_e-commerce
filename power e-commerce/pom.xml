@@ -50,9 +50,9 @@
         <aliyun-oss.version>2.5.0</aliyun-oss.version>
         <logstash-logback.version>7.2</logstash-logback.version>
         <minio.version>8.4.1</minio.version>
-        <mall-common.version>0.0.1-SNAPSHOT</mall-common.version>
-        <mall-mbg.version>0.0.1-SNAPSHOT</mall-mbg.version>
-        <mall-security.version>0.0.1-SNAPSHOT</mall-security.version>
+        <power-common.version>0.0.1-SNAPSHOT</power-common.version>
+        <power-mbg.version>0.0.1-SNAPSHOT</power-mbg.version>
+        <power-security.version>0.0.1-SNAPSHOT</power-security.version>
     </properties>
 
     <!--项目依赖-->
