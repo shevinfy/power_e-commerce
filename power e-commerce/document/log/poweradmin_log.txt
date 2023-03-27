@@ -1,4 +1,0 @@
-2022-09-18 18:49:04.134  INFO 24988 --- [main] c.e.p.PowerAdminApplicationTests         : Starting PowerAdminApplicationTests using Java 1.8.0_221 on LAPTOP-M47I6P36 with PID 24988 (started by Lenovo in F:\java_project\mall\shevinfy_power_e-commerce\power e-commerce\power-admin)
-2022-09-18 18:49:04.137 DEBUG 24988 --- [main] c.e.p.PowerAdminApplicationTests         : Running with Spring Boot v2.7.3, Spring v5.3.22
-2022-09-18 18:49:04.137  INFO 24988 --- [main] c.e.p.PowerAdminApplicationTests         : The following 1 profile is active: "dev"
-2022-09-18 18:49:05.246  INFO 24988 --- [main] c.e.p.PowerAdminApplicationTests         : Started PowerAdminApplicationTests in 1.403 seconds (JVM running for 2.256)
